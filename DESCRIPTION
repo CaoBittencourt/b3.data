@@ -1,11 +1,11 @@
 Package: b3.data
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Title: Tidy Financial Transactions Data
+Version: 1.0.0
+Author: Cao Bittencourt
+Maintainer: Cao Bittencourt <caobittencourt@gmail.com>
+Description: Fetch and clean financial transactions data from B3's platform.
+Depends: readxl, dplyr, tidyr, stringr, lubridate
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
