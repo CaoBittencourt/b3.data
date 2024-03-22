@@ -66,6 +66,7 @@ fun_b3_is_stock <- function(chr_ticker){
   return(lgc_stock)
 
 }
+
 # - Clean data (transactions) ---------------------------------------------------------
 fun_b3_clean_transactions <- function(list_chr_path_transactions){
 
