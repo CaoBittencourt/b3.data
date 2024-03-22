@@ -253,7 +253,7 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
   new_data_frame(
     df_other
     , class = c(
-      class(df_transactions),
+      class(df_other),
       'df_other'
     )
   ) -> df_other
