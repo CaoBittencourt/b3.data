@@ -82,12 +82,11 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
   # rename necessary columns
   df_transactions %>%
     rename(
-      date = Data,
-      type = `Entrada/Saída`,
-      event = Movimentação,
-      ticker = Produto,
+      date = `Data do Negócio`,
+      type = `Tipo de Movimentação`,
+      ticker = `Código de Negociação`,
       qtd = Quantidade,
-      price = `Preço unitário`
+      price = Preço
     ) -> df_transactions
 
   # select only necessary columns
@@ -95,7 +94,6 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
     select(
       date,
       type,
-      event,
       ticker,
       qtd,
       price
@@ -112,18 +110,17 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
 
   # lowercase chr
   df_transactions %>%
-    mutate(across(
-      .cols = c(type, event)
-      ,.fns = str_to_lower
-    )) -> df_transactions
+    mutate(
+      type = str_to_lower(type)
+    ) -> df_transactions
 
   # operation sign
   df_transactions %>%
     mutate(
-      qtd = case_match(
-        type
-        , c('crédito', 'credito') ~ qtd
-        , c('débito', 'debito') ~ -qtd
+      qtd = case_when(
+        type == 'compra' ~ qtd,
+        type == 'venda' ~ -qtd,
+        T ~ NA
       )
     ) -> df_transactions
 
@@ -131,13 +128,6 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
   df_transactions %>%
     mutate(
       ticker =
-        str_split(
-          ticker,
-          pattern = ' - ',
-          n = 2,
-          simplify = T
-        )[,1]
-      , ticker =
         fun_b3_ticker(
           ticker
         )
@@ -150,30 +140,9 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
       ,.fns = fun_b3_numeric
     )) -> df_transactions
 
-  # set NA prices to 0
-  df_transactions %>%
-    mutate(
-      price = if_else(
-        !is.na(price)
-        , price
-        , 0
-      )
-    ) -> df_transactions
-
   # arrange by date
   df_transactions %>%
     arrange(date) ->
-    df_transactions
-
-  # grouping indicator
-  df_transactions %>%
-    group_by(ticker) %>%
-    mutate(
-      .after = event
-      , cycle = cumsum(event == 'grupamento')
-      , cycle = factor(cycle)
-    ) %>%
-    ungroup() ->
     df_transactions
 
   # stock indicator
@@ -186,9 +155,142 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
       , stock = as.logical(stock)
     ) -> df_transactions
 
-  # separate regular transactions,
+  # add subclass
+  new_data_frame(
+    df_transactions
+    , class = c(
+      class(df_transactions),
+      'df_transactions'
+    )
+  ) -> df_transactions
+
+  # output
+  return(df_transactions)
+
+}
+
+# - Clean data (events) ---------------------------------------------------------
+fun_b3_clean_events <- function(list_chr_path_events){
+
+  # read b3 financial events files
+  lapply(
+    list_chr_path_events,
+    read_excel
+  ) %>%
+    bind_rows() ->
+    df_events
+
+  # clean b3 financial events files
+  # rename necessary columns
+  df_events %>%
+    rename(
+      date = Data,
+      type = `Entrada/Saída`,
+      event = Movimentação,
+      ticker = Produto,
+      qtd = Quantidade,
+      price = `Preço unitário`
+    ) -> df_events
+
+  # select only necessary columns
+  df_events %>%
+    select(
+      date,
+      type,
+      event,
+      ticker,
+      qtd,
+      price
+    ) -> df_events
+
+  # date type
+  df_events %>%
+    mutate(
+      date = as_date(
+        date,
+        format = '%d/%m/%Y'
+      )
+    ) -> df_events
+
+  # lowercase chr
+  df_events %>%
+    mutate(across(
+      .cols = c(type, event)
+      ,.fns = str_to_lower
+    )) -> df_events
+
+  # operation sign
+  df_events %>%
+    mutate(
+      qtd = case_match(
+        type
+        , c('crédito', 'credito') ~ qtd
+        , c('débito', 'debito') ~ -qtd
+      )
+    ) -> df_events
+
+  # standardize tickers
+  df_events %>%
+    mutate(
+      ticker =
+        str_split(
+          ticker,
+          pattern = ' - ',
+          n = 2,
+          simplify = T
+        )[,1]
+      , ticker =
+        fun_b3_ticker(
+          ticker
+        )
+    ) -> df_events
+
+  # standardize numeric variables
+  df_events %>%
+    mutate(across(
+      .cols = c(qtd, price)
+      ,.fns = fun_b3_numeric
+    )) -> df_events
+
+  # set NA prices to 0
+  df_events %>%
+    mutate(
+      price = if_else(
+        !is.na(price)
+        , price
+        , 0
+      )
+    ) -> df_events
+
+  # arrange by date
+  df_events %>%
+    arrange(date) ->
+    df_events
+
+  # grouping indicator
+  df_events %>%
+    group_by(ticker) %>%
+    mutate(
+      .after = event
+      , cycle = cumsum(event == 'grupamento')
+      , cycle = factor(cycle)
+    ) %>%
+    ungroup() ->
+    df_events
+
+  # stock indicator
+  df_events %>%
+    mutate(
+      .after = ticker
+      , stock = fun_b3_is_stock(
+        ticker
+      )
+      , stock = as.logical(stock)
+    ) -> df_events
+
+  # separate regular events,
   # dividends, and other events
-  df_transactions %>%
+  df_events %>%
     filter(
       if_all(
         .cols = event
@@ -199,7 +301,7 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
       )
     ) -> df_dividends
 
-  df_transactions %>%
+  df_events %>%
     filter(
       str_detect(
         event,
@@ -207,24 +309,24 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
       )
     ) -> df_other
 
-  df_transactions %>%
+  df_events %>%
     filter(
       event != 'transferência'
       , !str_detect(
         event,
         'divid|juros|rend|fraç|leil'
       )
-    ) -> df_transactions
+    ) -> df_events
 
   # round down decimal stocks
-  df_transactions %>%
+  df_events %>%
     mutate(
       qtd = if_else(
         stock
         , floor(qtd)
         , qtd
       )
-    ) -> df_transactions
+    ) -> df_events
 
   df_dividends %>%
     mutate(
@@ -237,12 +339,12 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
 
   # add subclasses
   new_data_frame(
-    df_transactions
+    df_events
     , class = c(
-      class(df_transactions),
-      'df_transactions'
+      class(df_events),
+      'df_events'
     )
-  ) -> df_transactions
+  ) -> df_events
 
   new_data_frame(
     df_dividends
@@ -262,7 +364,7 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
 
   # output
   return(list(
-    'transactions' = df_transactions,
+    'events' = df_events,
     'dividends' = df_dividends,
     'other' = df_other
   ))
@@ -270,7 +372,10 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
 }
 
 # - Clean data (main) ---------------------------------------------------------
-fun_b3_clean <- function(list_chr_path_transactions){
+fun_b3_clean <- function(
+    list_chr_path_transactions,
+    list_chr_path_events
+){
 
   # arguments validation
   stopifnot(
@@ -284,13 +389,35 @@ fun_b3_clean <- function(list_chr_path_transactions){
       )
   )
 
-  # apply data cleaning function
-  tryCatch(
-    expr = {fun_b3_clean_transactions(
-      list_chr_path_transactions
-    )}
-    , error = function(e){NULL}
+  stopifnot(
+    "'list_chr_path_events' must be a list of paths to B3 financial events .xlsx files." =
+      all(
+        is.list(list_chr_path_events),
+        sapply(
+          list_chr_path_events
+          , is.character
+        )
+      )
+  )
+
+  # apply data cleaning functions
+  Map(
+    function(b3_files, b3_fun){
+      tryCatch(
+        expr = {do.call(b3_fun, list(b3_files))}
+        , error = function(e){NULL}
+      )
+    }
+    , b3_files = list(
+      'transactions' = list_chr_path_transactions,
+      'events' = list_chr_path_events
+    )
+    , b3_fun = list(
+      fun_b3_clean_transactions,
+      fun_b3_clean_events
+    )
   ) -> list_b3_data
+
 
   # output
   return(list_b3_data)
