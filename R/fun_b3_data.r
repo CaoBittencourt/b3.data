@@ -208,7 +208,8 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
 
   df_transactions %>%
     filter(
-      !str_detect(
+      event != 'transferência'
+      , !str_detect(
         event,
         'divid|juros|rend|fraç|leil'
       )
