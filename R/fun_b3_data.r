@@ -236,24 +236,24 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
   # add subclasses
   new_data_frame(
     df_transactions
-    , class = class(
-      df_transactions,
+    , class = c(
+      class(df_transactions),
       'df_transactions'
     )
   ) -> df_transactions
 
   new_data_frame(
     df_dividends
-    , class = class(
-      df_dividends,
+    , class = c(
+      class(df_dividends),
       'df_dividends'
     )
   ) -> df_dividends
 
   new_data_frame(
     df_other
-    , class = class(
-      df_other,
+    , class = c(
+      class(df_transactions),
       'df_other'
     )
   ) -> df_other
