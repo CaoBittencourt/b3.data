@@ -288,7 +288,7 @@ fun_b3_clean_events <- function(list_chr_path_events){
       , stock = as.logical(stock)
     ) -> df_events
 
-  # separate regular events,
+  # separate financial transfers,
   # dividends, and other events
   df_events %>%
     filter(
@@ -316,17 +316,19 @@ fun_b3_clean_events <- function(list_chr_path_events){
         event,
         'divid|juros|rend|fraç|leil'
       )
-    ) -> df_events
+    ) -> df_transfers
+
+  rm(df_events)
 
   # round down decimal stocks
-  df_events %>%
+  df_transfers %>%
     mutate(
       qtd = if_else(
         stock
         , floor(qtd)
         , qtd
       )
-    ) -> df_events
+    ) -> df_transfers
 
   df_dividends %>%
     mutate(
@@ -339,12 +341,12 @@ fun_b3_clean_events <- function(list_chr_path_events){
 
   # add subclasses
   new_data_frame(
-    df_events
+    df_transfers
     , class = c(
-      class(df_events),
-      'df_events'
+      class(df_transfers),
+      'df_transfers'
     )
-  ) -> df_events
+  ) -> df_transfers
 
   new_data_frame(
     df_dividends
@@ -364,7 +366,7 @@ fun_b3_clean_events <- function(list_chr_path_events){
 
   # output
   return(list(
-    'events' = df_events,
+    'transfers' = df_transfers,
     'dividends' = df_dividends,
     'other' = df_other
   ))
