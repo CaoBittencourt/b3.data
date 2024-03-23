@@ -272,7 +272,9 @@ fun_b3_clean_events <- function(list_chr_path_events){
     group_by(ticker) %>%
     mutate(
       .after = event
-      , cycle = cumsum(event == 'grupamento')
+      , cycle = cumsum(
+        event == 'grupamento'
+      )
     ) %>%
     ungroup() ->
     df_events
@@ -286,13 +288,6 @@ fun_b3_clean_events <- function(list_chr_path_events){
       )
       , stock = as.logical(stock)
     ) -> df_events
-
-  # remove events that do not affect neither qtd nor price
-  df_events %>%
-    filter(!if_all(
-      .cols = c(qtd, price)
-      ,.fns = ~ .x == 0
-    )) -> df_events
 
   # separate financial transfers,
   # dividends, and other events
@@ -345,6 +340,19 @@ fun_b3_clean_events <- function(list_chr_path_events){
         , qtd
       )
     ) -> df_dividends
+
+  # remove events that do not affect neither qtd nor price
+  df_transfers %>%
+    filter(!if_all(
+      .cols = c(qtd, price)
+      ,.fns = ~ .x == 0
+    )) -> df_transfers
+
+  df_dividends %>%
+    filter(!if_all(
+      .cols = c(qtd, price)
+      ,.fns = ~ .x == 0
+    )) -> df_dividends
 
   # add subclasses
   new_data_frame(
