@@ -136,10 +136,10 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
       qtd = case_when(
         type == 'compra' ~ qtd,
         type == 'venda' ~ -qtd,
-        T ~ NA
+        .default = NA
       )
     ) -> df_transactions
-  
+
   # arrange by date
   df_transactions %>%
     arrange(date) ->
