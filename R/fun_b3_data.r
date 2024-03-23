@@ -273,7 +273,7 @@ fun_b3_clean_events <- function(list_chr_path_events){
     mutate(
       .after = event
       , cycle = cumsum(event == 'grupamento')
-      , cycle = factor(cycle)
+      # , cycle = factor(cycle)
     ) %>%
     ungroup() ->
     df_events
@@ -312,6 +312,7 @@ fun_b3_clean_events <- function(list_chr_path_events){
   df_events %>%
     filter(
       event != 'transferência'
+      # , event != 'atualização'
       , !str_detect(
         event,
         'divid|juros|rend|fraç|leil'
