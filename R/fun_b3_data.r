@@ -86,7 +86,8 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
       type = `Tipo de Movimentação`,
       ticker = `Código de Negociação`,
       qtd = Quantidade,
-      price = Preço
+      price = Preço,
+      value = Valor
     ) -> df_transactions
 
   # select only necessary columns
@@ -96,7 +97,8 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
       type,
       ticker,
       qtd,
-      price
+      price,
+      value
     ) -> df_transactions
 
   # date type
@@ -114,16 +116,6 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
       type = str_to_lower(type)
     ) -> df_transactions
 
-  # operation sign
-  df_transactions %>%
-    mutate(
-      qtd = case_when(
-        type == 'compra' ~ qtd,
-        type == 'venda' ~ -qtd,
-        T ~ NA
-      )
-    ) -> df_transactions
-
   # standardize tickers
   df_transactions %>%
     mutate(
@@ -136,8 +128,19 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
   # standardize numeric variables
   df_transactions %>%
     mutate(across(
-      .cols = c(qtd, price)
+      .cols = c(qtd, price, value)
       ,.fns = fun_b3_numeric
+    )) -> df_transactions
+
+  # operation sign
+  df_transactions %>%
+    mutate(across(
+      .cols = c(qtd, value)
+      ,.fns = ~ case_when(
+        type == 'compra' ~ .x,
+        type == 'venda' ~ -.x,
+        T ~ NA
+      )
     )) -> df_transactions
 
   # arrange by date
@@ -189,7 +192,8 @@ fun_b3_clean_events <- function(list_chr_path_events){
       event = Movimentação,
       ticker = Produto,
       qtd = Quantidade,
-      price = `Preço unitário`
+      price = `Preço unitário`,
+      value = `Valor da Operação`
     ) -> df_events
 
   # select only necessary columns
@@ -200,7 +204,8 @@ fun_b3_clean_events <- function(list_chr_path_events){
       event,
       ticker,
       qtd,
-      price
+      price,
+      value
     ) -> df_events
 
   # date type
@@ -218,16 +223,6 @@ fun_b3_clean_events <- function(list_chr_path_events){
       .cols = c(type, event)
       ,.fns = str_to_lower
     )) -> df_events
-
-  # operation sign
-  df_events %>%
-    mutate(
-      qtd = case_match(
-        type
-        , c('crédito', 'credito') ~ qtd
-        , c('débito', 'debito') ~ -qtd
-      )
-    ) -> df_events
 
   # standardize tickers
   df_events %>%
@@ -248,19 +243,31 @@ fun_b3_clean_events <- function(list_chr_path_events){
   # standardize numeric variables
   df_events %>%
     mutate(across(
-      .cols = c(qtd, price)
+      .cols = c(qtd, price, value)
       ,.fns = fun_b3_numeric
     )) -> df_events
 
-  # set NA prices to 0
+  # set NA prices and values to 0
   df_events %>%
-    mutate(
-      price = if_else(
-        !is.na(price)
-        , price
+    mutate(across(
+      .cols = c(price, value)
+      ,.fns = ~ if_else(
+        !is.na(.x)
+        , .x
         , 0
       )
-    ) -> df_events
+    )) -> df_events
+
+  # operation sign
+  df_events %>%
+    mutate(across(
+      .cols = c(qtd, value)
+      ,.fns = ~ case_match(
+        type
+        , c('crédito', 'credito') ~ .x
+        , c('débido', 'debito') ~ -.x
+      )
+    )) -> df_events
 
   # arrange by date
   df_events %>%
@@ -331,14 +338,14 @@ fun_b3_clean_events <- function(list_chr_path_events){
       )
     ) -> df_transfers
 
-  df_dividends %>%
-    mutate(
-      qtd = if_else(
-        stock
-        , floor(qtd)
-        , qtd
-      )
-    ) -> df_dividends
+  # df_dividends %>%
+  #   mutate(
+  #     qtd = if_else(
+  #       stock
+  #       , floor(qtd)
+  #       , qtd
+  #     )
+  #   ) -> df_dividends
 
   # add subclasses
   new_data_frame(
