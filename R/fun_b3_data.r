@@ -114,16 +114,6 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
       type = str_to_lower(type)
     ) -> df_transactions
 
-  # operation sign
-  df_transactions %>%
-    mutate(
-      qtd = case_when(
-        type == 'compra' ~ qtd,
-        type == 'venda' ~ -qtd,
-        T ~ NA
-      )
-    ) -> df_transactions
-
   # standardize tickers
   df_transactions %>%
     mutate(
@@ -140,6 +130,16 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
       ,.fns = fun_b3_numeric
     )) -> df_transactions
 
+  # operation sign
+  df_transactions %>%
+    mutate(
+      qtd = case_when(
+        type == 'compra' ~ qtd,
+        type == 'venda' ~ -qtd,
+        T ~ NA
+      )
+    ) -> df_transactions
+  
   # arrange by date
   df_transactions %>%
     arrange(date) ->
@@ -219,16 +219,6 @@ fun_b3_clean_events <- function(list_chr_path_events){
       ,.fns = str_to_lower
     )) -> df_events
 
-  # operation sign
-  df_events %>%
-    mutate(
-      qtd = case_match(
-        type
-        , c('crédito', 'credito') ~ qtd
-        , c('débito', 'debito') ~ -qtd
-      )
-    ) -> df_events
-
   # standardize tickers
   df_events %>%
     mutate(
@@ -251,6 +241,16 @@ fun_b3_clean_events <- function(list_chr_path_events){
       .cols = c(qtd, price)
       ,.fns = fun_b3_numeric
     )) -> df_events
+
+  # operation sign
+  df_events %>%
+    mutate(
+      qtd = case_match(
+        type
+        , c('crédito', 'credito') ~ qtd
+        , c('débito', 'debito') ~ -qtd
+      )
+    ) -> df_events
 
   # set NA prices to 0
   df_events %>%
