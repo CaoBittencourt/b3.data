@@ -170,7 +170,11 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
 }
 
 # - Clean data (events) ---------------------------------------------------------
-fun_b3_clean_events <- function(list_chr_path_events){
+fun_b3_clean_events <- function(
+    list_chr_path_events,
+    list_chr_path_events_remove = NULL,
+    list_chr_path_events_add = NULL
+){
 
   # read b3 financial events files
   lapply(
@@ -179,6 +183,37 @@ fun_b3_clean_events <- function(list_chr_path_events){
   ) %>%
     bind_rows() ->
     df_events
+
+  # anti-join to remove rows
+  if(length(
+    list_chr_path_events_remove
+  )){
+
+    df_events %>%
+      anti_join(
+        lapply(
+          list_chr_path_events_remove,
+          read_excel
+        ) %>%
+          bind_rows()
+      ) -> df_events
+
+  }
+
+  # bind rows to add rows
+  if(length(
+    list_chr_path_events_add
+  )){
+
+    lapply(
+      list_chr_path_events_add
+      , read_excel
+    ) %>%
+      bind_rows(
+        df_events
+      ) -> df_events
+
+  }
 
   # clean b3 financial events files
   # rename necessary columns
@@ -391,7 +426,9 @@ fun_b3_clean_events <- function(list_chr_path_events){
 # - Clean data (main) ---------------------------------------------------------
 fun_b3_clean <- function(
     list_chr_path_transactions,
-    list_chr_path_events
+    list_chr_path_events,
+    list_chr_path_events_remove = NULL,
+    list_chr_path_events_add = NULL
 ){
 
   # arguments validation
@@ -421,20 +458,25 @@ fun_b3_clean <- function(
   Map(
     function(b3_files, b3_fun){
       tryCatch(
-        expr = {do.call(b3_fun, list(b3_files))}
+        expr = {do.call(b3_fun, b3_files)}
         , error = function(e){NULL}
       )
     }
     , b3_files = list(
-      'transactions' = list_chr_path_transactions,
-      'events' = list_chr_path_events
+      'transactions' = list(
+        list_chr_path_transactions
+      )
+      , 'events' = list(
+        list_chr_path_events,
+        list_chr_path_events_remove,
+        list_chr_path_events_add
+      )
     )
     , b3_fun = list(
       fun_b3_clean_transactions,
       fun_b3_clean_events
     )
   ) -> list_b3_data
-
 
   # output
   return(list_b3_data)
