@@ -335,7 +335,7 @@ fun_b3_clean_events <- function(
           ~ !str_detect(.x, 'transf')
         )
       )
-    ) -> df_dividends
+    ) -> df_events_dividends
 
   df_events %>%
     filter(
@@ -343,7 +343,7 @@ fun_b3_clean_events <- function(
         event,
         'fraç|leil'
       )
-    ) -> df_other
+    ) -> df_events_other
 
   df_events %>%
     filter(
@@ -353,72 +353,72 @@ fun_b3_clean_events <- function(
         event,
         'divid|juros|rend|fraç|leil'
       )
-    ) -> df_transfers
+    ) -> df_events_transfers
 
   rm(df_events)
 
   # round down decimal stocks
-  df_transfers %>%
+  df_events_transfers %>%
     mutate(
       qtd = if_else(
         stock
         , floor(qtd)
         , qtd
       )
-    ) -> df_transfers
+    ) -> df_events_transfers
 
-  df_dividends %>%
+  df_events_dividends %>%
     mutate(
       qtd = if_else(
         stock
         , floor(qtd)
         , qtd
       )
-    ) -> df_dividends
+    ) -> df_events_dividends
 
   # remove events that do not affect neither qtd nor price
-  df_transfers %>%
+  df_events_transfers %>%
     filter(!if_all(
       .cols = c(qtd, price)
       ,.fns = ~ .x == 0
-    )) -> df_transfers
+    )) -> df_events_transfers
 
-  df_dividends %>%
+  df_events_dividends %>%
     filter(!if_all(
       .cols = c(qtd, price)
       ,.fns = ~ .x == 0
-    )) -> df_dividends
+    )) -> df_events_dividends
 
   # add subclasses
   new_data_frame(
-    df_transfers
+    df_events_transfers
     , class = c(
-      class(df_transfers),
-      'df_transfers'
+      class(df_events_transfers),
+      'df_events_transfers'
     )
-  ) -> df_transfers
+  ) -> df_events_transfers
 
   new_data_frame(
-    df_dividends
+    df_events_dividends
     , class = c(
-      class(df_dividends),
-      'df_dividends'
+      class(df_events_dividends),
+      'df_events_dividends'
     )
-  ) -> df_dividends
+  ) -> df_events_dividends
 
   new_data_frame(
-    df_other
+    df_events_other
     , class = c(
-      class(df_other),
-      'df_other'
+      class(df_events_other),
+      'df_events_other'
     )
-  ) -> df_other
+  ) -> df_events_other
 
   # output
   return(list(
-    'transfers' = df_transfers,
-    'dividends' = df_dividends,
-    'other' = df_other
+    'transfers' = df_events_transfers,
+    'dividends' = df_events_dividends,
+    'other' = df_events_other
   ))
 
 }
