@@ -1,5 +1,5 @@
 # [FUNCTIONS] --------------------------------------------------------------
-# - Standardize numeric variables -----------------------------------------
+# - standardize numeric variables -----------------------------------------
 fun_b3_numeric <- function(chr_var){
 
   # standardize numeric variable

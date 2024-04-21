@@ -1,5 +1,5 @@
 # [FUNCTIONS] --------------------------------------------------------------
-# - Standardize tickers ---------------------------------------------------
+# - standardize tickers ---------------------------------------------------
 fun_b3_ticker <- function(chr_ticker){
 
   # arguments validation
