@@ -1,5 +1,4 @@
-# [FUNCTIONS] --------------------------------------------------------------
-# - Clean data (transactions) ---------------------------------------------------------
+# clean data (transactions)
 fun_b3_clean_transactions <- function(list_chr_path_transactions){
 
   # read b3 financial transactions files
@@ -101,7 +100,7 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
 
 }
 
-# - Clean data (events) ---------------------------------------------------------
+# clean data (events)
 fun_b3_clean_events <- function(
     list_chr_path_events,
     list_chr_path_events_remove = NULL,
@@ -234,18 +233,6 @@ fun_b3_clean_events <- function(
     arrange(date) ->
     df_events
 
-  # remove problematic events
-  df_events %>%
-    group_by(ticker) %>%
-    filter(!(
-      str_detect(event, 'atualiza')
-      & qtd == lag(cumsum(
-        qtd * (1 - str_detect(event, 'atualiza'))
-      ), default = 0)
-    )) %>%
-    ungroup() ->
-    df_events
-
   # grouping indicator
   df_events %>%
     group_by(ticker) %>%
@@ -267,6 +254,10 @@ fun_b3_clean_events <- function(
       )
       , stock = as.logical(stock)
     ) -> df_events
+
+  # indicator for whether the asset is currently active
+  # i.e. available on the market
+  df_events$active <- T
 
   # separate financial transfers,
   # dividends, and other events
@@ -299,6 +290,18 @@ fun_b3_clean_events <- function(
     ) -> df_events_transfers
 
   rm(df_events)
+
+  # remove problematic transfer events
+  df_events_transfers %>%
+    group_by(ticker) %>%
+    filter(!(
+      str_detect(event, 'atualiza')
+      & qtd == lag(cumsum(
+        qtd * (1 - str_detect(event, 'atualiza'))
+      ), default = 0)
+    )) %>%
+    ungroup() ->
+    df_events_transfers
 
   # round down decimal stocks
   df_events_transfers %>%
@@ -366,7 +369,7 @@ fun_b3_clean_events <- function(
 
 }
 
-# - Clean data (main) ---------------------------------------------------------
+# clean data (main)
 fun_b3_clean <- function(
     list_chr_path_transactions,
     list_chr_path_events,
@@ -425,4 +428,3 @@ fun_b3_clean <- function(
   return(list_b3_data)
 
 }
-
