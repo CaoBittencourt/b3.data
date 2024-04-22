@@ -53,6 +53,12 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
         fun_b3_ticker(
           ticker
         )
+    ) -> df_transactions
+
+  # ticker type
+  df_transactions %>%
+    mutate(
+      .after = ticker
       , ticker_type =
         fun_b3_ticker_type(
           ticker
@@ -62,7 +68,7 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
   # stock indicator
   df_transactions %>%
     mutate(
-      .after = ticker
+      .after = ticker_type
       , stock = fun_b3_is_stock(
         ticker
       )
@@ -204,6 +210,12 @@ fun_b3_clean_events <- function(
         fun_b3_ticker(
           ticker
         )
+    ) -> df_events
+
+  # ticker type
+  df_events %>%
+    mutate(
+      .after = ticker
       , ticker_type =
         fun_b3_ticker_type(
           ticker
@@ -211,14 +223,14 @@ fun_b3_clean_events <- function(
     ) -> df_events
 
   # stock indicator
-  df_transactions %>%
+  df_events %>%
     mutate(
-      .after = ticker
+      .after = ticker_type
       , stock = fun_b3_is_stock(
         ticker
       )
       , stock = as.logical(stock)
-    ) -> df_transactions
+    ) -> df_events
 
   # standardize numeric variables
   df_events %>%

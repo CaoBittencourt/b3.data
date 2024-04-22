@@ -37,8 +37,16 @@ fun_b3_ticker_type <- function(chr_ticker){
     )
   ) -> int_ticker
 
+  # valid b3 ticker type
+  int_ticker[
+    str_length(
+      int_ticker
+    ) > 2
+  ] <- NA
+
   # output
   return(int_ticker)
 
 }
+
 
