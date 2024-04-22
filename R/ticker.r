@@ -20,3 +20,25 @@ fun_b3_ticker <- function(chr_ticker){
 
 }
 
+# - ticker type (int code) --------------------------------------------
+fun_b3_ticker_type <- function(chr_ticker){
+
+  # arguments validation
+  stopifnot(
+    "'chr_ticker' must be a character string." =
+      is.character(chr_ticker)
+  )
+
+  # parse ticker number
+  as.integer(
+    str_remove_all(
+      chr_ticker
+      , '\\D'
+    )
+  ) -> int_ticker
+
+  # output
+  return(int_ticker)
+
+}
+

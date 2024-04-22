@@ -53,6 +53,20 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
         fun_b3_ticker(
           ticker
         )
+      , ticker_type =
+        fun_b3_ticker_type(
+          ticker
+        )
+    ) -> df_transactions
+
+  # stock indicator
+  df_transactions %>%
+    mutate(
+      .after = ticker
+      , stock = fun_b3_is_stock(
+        ticker
+      )
+      , stock = as.logical(stock)
     ) -> df_transactions
 
   # standardize numeric variables
@@ -76,16 +90,6 @@ fun_b3_clean_transactions <- function(list_chr_path_transactions){
   df_transactions %>%
     arrange(date) ->
     df_transactions
-
-  # stock indicator
-  df_transactions %>%
-    mutate(
-      .after = ticker
-      , stock = fun_b3_is_stock(
-        ticker
-      )
-      , stock = as.logical(stock)
-    ) -> df_transactions
 
   # add subclass
   new_data_frame(
@@ -200,7 +204,21 @@ fun_b3_clean_events <- function(
         fun_b3_ticker(
           ticker
         )
+      , ticker_type =
+        fun_b3_ticker_type(
+          ticker
+        )
     ) -> df_events
+
+  # stock indicator
+  df_transactions %>%
+    mutate(
+      .after = ticker
+      , stock = fun_b3_is_stock(
+        ticker
+      )
+      , stock = as.logical(stock)
+    ) -> df_transactions
 
   # standardize numeric variables
   df_events %>%
@@ -245,16 +263,6 @@ fun_b3_clean_events <- function(
     ) %>%
     ungroup() ->
     df_events
-
-  # stock indicator
-  df_events %>%
-    mutate(
-      .after = ticker
-      , stock = fun_b3_is_stock(
-        ticker
-      )
-      , stock = as.logical(stock)
-    ) -> df_events
 
   # indicator for whether the asset is currently active
   # i.e. available on the market
