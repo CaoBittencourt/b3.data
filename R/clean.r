@@ -326,80 +326,88 @@ fun_b3_clean_events <- function(
     ungroup() ->
     df_events_transfers
 
-  # conversion dates
-  df_events_transfers %>%
-    inner_join(
-      df_convert
-      , by = c(
-        'ticker' =
-          'new_ticker'
-      )
-    ) %>%
-    group_by(
-      ticker
-    ) %>%
-    slice(1) %>%
-    ungroup() %>%
-    mutate(
-      convert = date
-    ) %>%
-    select(
-      convert,
-      ticker
-    ) %>%
-    rename(
-      new_ticker =
-        ticker
-    ) %>%
-    inner_join(
-      df_convert
-    ) -> df_convert
-
   # converted tickers
-  df_events_transfers %>%
-    inner_join(
-      df_convert
-    ) %>%
-    replicate(
-      n = 2
-      , simplify = F
-    ) %>%
-    set_names(c(
-      'ticker',
-      'new_ticker'
-    )) %>%
-    bind_rows(
-      .id = 'ticker_convert'
-    ) %>%
-    mutate(
-      ticker = if_else(
-        ticker_convert ==
-          'ticker'
-        , ticker
-        , new_ticker
-      )
-    ) %>%
-    select(
-      -new_ticker
-    ) %>%
-    bind_rows(
-      df_events_transfers %>%
-        filter(!(
-          ticker %in%
-            df_convert$
-            ticker
-        ))
-    ) %>%
-    arrange(
-      date
-    ) %>%
-    mutate(
-      cycle = if_else(
-        is.na(convert)
-        , cycle + 1
-        , cycle
-      )
-    ) -> df_events_transfers
+  if(!is.null(df_convert)){
+
+    # conversion dates
+    df_events_transfers %>%
+      inner_join(
+        df_convert
+        , by = c(
+          'ticker' =
+            'new_ticker'
+        )
+      ) %>%
+      group_by(
+        ticker
+      ) %>%
+      slice(1) %>%
+      ungroup() %>%
+      mutate(
+        convert = date
+      ) %>%
+      select(
+        convert,
+        ticker
+      ) %>%
+      rename(
+        new_ticker =
+          ticker
+      ) %>%
+      inner_join(
+        df_convert
+      ) -> df_convert
+
+    # converted ticker data
+    df_events_transfers %>%
+      inner_join(
+        df_convert
+      ) %>%
+      replicate(
+        n = 2
+        , simplify = F
+      ) %>%
+      set_names(c(
+        'ticker',
+        'new_ticker'
+      )) %>%
+      bind_rows(
+        .id = 'ticker_convert'
+      ) %>%
+      mutate(
+        ticker = if_else(
+          ticker_convert ==
+            'ticker'
+          , ticker
+          , new_ticker
+        )
+      ) %>%
+      select(
+        -new_ticker
+      ) %>%
+      bind_rows(
+        df_events_transfers %>%
+          filter(!(
+            ticker %in%
+              df_convert$
+              ticker
+          ))
+      ) %>%
+      arrange(
+        date
+      ) %>%
+      mutate(
+        cycle = if_else(
+          # is.na(convert)
+          is.na(ticker_convert)
+          | ticker_convert !=
+            'new_ticker'
+          , cycle + 1
+          , cycle
+        )
+      ) -> df_events_transfers
+
+  }
 
   # round down decimal stocks
   df_events_transfers %>%
