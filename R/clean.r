@@ -326,37 +326,44 @@ fun_b3_clean_events <- function(
     ungroup() ->
     df_events_transfers
 
+  # default proportion
+  df_events_transfers$prop <- 1
+
   # converted tickers
   if(!is.null(df_convert)){
 
     # conversion dates
-    df_events_transfers %>%
+    df_convert %>%
       inner_join(
-        df_convert
+        df_events_transfers
         , by = c(
-          'ticker' =
-            'new_ticker'
+          'new_ticker' =
+            'ticker'
         )
+        , multiple = 'all'
+        , relationship =
+          'many-to-many'
+      ) %>%
+      select(
+        convert = date,
+        ticker,
+        new_ticker,
+        prop
       ) %>%
       group_by(
+        new_ticker,
         ticker
       ) %>%
       slice(1) %>%
       ungroup() %>%
-      mutate(
-        convert = date
-      ) %>%
-      select(
-        convert,
+      group_by(
         ticker
       ) %>%
-      rename(
-        new_ticker =
-          ticker
+      mutate(
+        prop = 1 / n()
       ) %>%
-      inner_join(
-        df_convert
-      ) -> df_convert
+      ungroup() ->
+      df_convert
 
     # converted ticker data
     df_events_transfers %>%
@@ -398,7 +405,6 @@ fun_b3_clean_events <- function(
       ) %>%
       mutate(
         cycle = if_else(
-          # is.na(convert)
           is.na(ticker_convert)
           | ticker_convert !=
             'new_ticker'
