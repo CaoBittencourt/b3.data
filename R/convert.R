@@ -77,9 +77,32 @@ fun_b3_convert_data <- function(
           ticker
           , obsolete =
             convert
+          , date =
+            convert
         ) %>%
-        unique()
+        unique() %>%
+        mutate(
+          qtd = 0,
+          price = 0,
+          active = F
+        )
     ) %>%
+    arrange(
+      ticker,
+      date
+    ) %>%
+    group_by(
+      ticker
+    ) %>%
+    fill(
+      c(
+        ticker_type,
+        cycle,
+        stock,
+        prop
+      )
+    ) %>%
+    ungroup() %>%
     mutate(
       cycle = if_else(
         is.na(convert)

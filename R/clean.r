@@ -626,9 +626,6 @@ fun_b3_clean_events <- function(
     ungroup() ->
     df_events_transfers
 
-  return(list(transfers = df_events_transfers))
-  stop()
-
   # converted tickers
   if(!is.null(df_convert)){
 
