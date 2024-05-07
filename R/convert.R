@@ -71,6 +71,15 @@ fun_b3_convert_data <- function(
     bind_rows(
       df_events_transfers
     ) %>%
+    bind_rows(
+      df_convert %>%
+        select(
+          ticker
+          , obsolete =
+            convert
+        ) %>%
+        unique()
+    ) %>%
     mutate(
       cycle = if_else(
         is.na(convert)
@@ -106,14 +115,14 @@ fun_b3_convert_stages <- function(
     #     as.numeric(
     #       new_ticker %in%
     #         ticker
-    #     )
-    #   # , stage =
-    # ) %>%
-    mutate(
-      stage =
-        ticker %in%
-        new_ticker
-    ) %>%
+  #     )
+  #   # , stage =
+  # ) %>%
+  mutate(
+    stage =
+      ticker %in%
+      new_ticker
+  ) %>%
     split(.$stage) ->
     list_convert
 
