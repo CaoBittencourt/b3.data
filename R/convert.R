@@ -23,8 +23,7 @@ fun_b3_convert_date <- function(
     select(
       convert = date,
       ticker,
-      new_ticker,
-      prop
+      new_ticker
     ) %>%
     group_by(
       new_ticker,
@@ -56,52 +55,80 @@ fun_b3_convert_data <- function(
   # arguments validated in the cleaning function
 
   # converted ticker data
-  df_events_transfers %>%
+  df_convert %>%
     inner_join(
-      df_convert
-    ) %>%
-    replicate(
-      n = 2
-      , simplify = F
-    ) %>%
-    set_names(c(
-      'ticker',
-      'new_ticker'
-    )) %>%
-    bind_rows(
-      .id = 'ticker_convert'
+      df_events_transfers
+      , multiple = 'all'
+      , relationship =
+        'many-to-many'
     ) %>%
     mutate(
-      ticker = if_else(
-        ticker_convert ==
-          'ticker'
-        , ticker
-        , new_ticker
-      )
+      ticker = new_ticker
     ) %>%
     select(
       -new_ticker
     ) %>%
     bind_rows(
-      df_events_transfers %>%
-        filter(!(
-          ticker %in%
-            df_convert$
-            ticker
-        ))
-    ) %>%
-    arrange(
-      date
+      df_events_transfers
     ) %>%
     mutate(
       cycle = if_else(
-        is.na(ticker_convert)
-        | ticker_convert !=
-          'new_ticker'
+        is.na(convert)
         , cycle + 1
         , cycle
       )
     ) -> df_events_transfers
+
+  # output
+  return(df_events_transfers)
+
+}
+
+# - conversion stages -----------------------------------------------------
+fun_b3_convert_stages <- function(
+    df_events_transfers,
+    df_convert
+){
+
+  # helper function for events cleaning function
+  # arguments validated in the cleaning function
+
+  # stage of ticker conversion
+  df_convert %>%
+    # mutate(
+    #   ticker_stage =
+    #     as.numeric(
+    #       ticker %in%
+    #         new_ticker
+    #     )
+    #   , new_ticker_stage =
+    #     ticker_stage +
+    #     as.numeric(
+    #       new_ticker %in%
+    #         ticker
+    #     )
+    #   # , stage =
+    # ) %>%
+    mutate(
+      stage =
+        ticker %in%
+        new_ticker
+    ) %>%
+    split(.$stage) ->
+    list_convert
+
+  # iterative ticker conversion
+  for (df_stage in list_convert) {
+
+    # apply the conversion function
+    # updating transfers data frame
+    # for subsequent stages
+    fun_b3_convert_data(
+      df_events_transfers,
+      df_stage
+    ) -> df_events_transfers
+
+  }
 
   # output
   return(df_events_transfers)
