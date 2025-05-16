@@ -5,7 +5,7 @@ Version: 1.9.3
 Author: Cao Bittencourt
 Maintainer: Cao Bittencourt <caobittencourt@gmail.com>
 Description: Fetch and clean financial transactions data from B3's platform.
-Depends: readxl, dplyr, tidyr, stringr, lubridate, vctrs
+Depends: readxl, dplyr, tidyr, stringr, lubridate, vctrs, rlang
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true

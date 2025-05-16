@@ -578,10 +578,6 @@ fun_b3_clean_events <- function(
     ungroup() ->
     df_events
 
-  # indicator for whether the asset is currently active
-  # i.e. available on the market
-  df_events$active <- T
-
   # separate financial transfers,
   # dividends, and other events
   df_events %>%
@@ -626,6 +622,14 @@ fun_b3_clean_events <- function(
     ungroup() ->
     df_events_transfers
 
+  # # obsolete tickers
+  # df_events$active <- T
+  #
+  # # default proportion
+  # df_events_transfers[is.na(
+  #   df_events_transfers$prop
+  # ), ]$prop <- 1
+
   # converted tickers
   if(!is.null(df_convert)){
 
@@ -648,11 +652,6 @@ fun_b3_clean_events <- function(
     # ) -> df_events_transfers
 
   }
-
-  # default proportion
-  df_events_transfers[is.na(
-    df_events_transfers$prop
-  ), ]$prop <- 1
 
   # round down decimal stocks
   df_events_transfers %>%
