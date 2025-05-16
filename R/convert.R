@@ -106,6 +106,16 @@ fun_b3_convert_data <- function(
       )
     ) -> df_events_transfers
 
+  df_events_transfers %>%
+    mutate(
+      prop = if_else(
+        is.na(prop),
+        1,
+        prop
+      )
+    ) ->
+  df_events_transfers
+
   # output
   return(df_events_transfers)
 }
@@ -151,16 +161,6 @@ fun_b3_convert_stages <- function(
       df_stage
     ) -> df_events_transfers
   }
-
-  df_events_transfers %>%
-    mutate(
-      prop = if_else(
-        is.na(prop),
-        1,
-        prop
-      )
-    ) ->
-  df_events_transfers
 
   # output
   return(df_events_transfers)
