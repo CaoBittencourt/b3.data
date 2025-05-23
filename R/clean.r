@@ -523,6 +523,21 @@ fun_b3_clean_events <- function(
       .fns = fun_b3_numeric
     )) -> df_events
 
+  # stock buyback
+  df_events %>%
+    mutate(
+      type = if_else(
+        event |> str_like("restitui%"),
+        "debito",
+        type
+      ),
+      price = if_else(
+        event |> str_like("restitui%"),
+        0,
+        price
+      )
+    ) -> df_events
+
   # operation sign
   df_events %>%
     mutate(
